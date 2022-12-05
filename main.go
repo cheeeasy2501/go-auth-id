@@ -5,6 +5,9 @@ import (
 
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
+   ctx "context"
+   "os/signal"
+	"syscall"
 
 	app "github.com/cheeeasy2501/auth-id/cmd/app"
    cfg "github.com/cheeeasy2501/auth-id/config/app"
@@ -20,19 +23,31 @@ func main() {
 		logger.Fatal("No .env file found")
 	}
 
+   logger.Infoln(".env variables is loaded")
+
    // инициализируем базу данных и конфиг
    config:= cfg.NewConfig()
    db := database.NewDB(config.Database)
 
-   _, err := db.OpenConnection()
+   conn, err := db.OpenConnection()
    if err != nil {
       logger.Fatal("Connection isn't opened!")
    }
    defer db.CloseConnection()
-	// Инициализируем  репозитории, сервисы, мб GRPC-сервис
+   logger.Infoln("Database connection is opened")
+
+   
+   ctx, cancel := signal.NotifyContext(ctx.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer cancel()
+
+   // Инициализируем  репозитории, сервисы, мб GRPC-сервис
   // services := NewServices()
 	//  стартуем приложение
-	app.Run(logger, config)
+   logger.Infoln("Starting application")
+	app.Run(ctx, logger, config, conn)
+   logger.Infoln("Application is started")
+
+   <-ctx.Done()
 }
 
 func NewServices() {

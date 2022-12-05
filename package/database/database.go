@@ -1,10 +1,13 @@
 package database
 
 import (
+	"database/sql"
+	"log"
+	"time"
+
+	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"database/sql"
-	"time"
 )
 
 type IDatabase interface {
@@ -26,12 +29,13 @@ func NewDB(config IConfig) *Database {
 func (db *Database) getDsnString() string {
 	return "host=" + db.config.getHost() + " user=" + db.config.getUser() +
 	" password=" + db.config.getPassword() + " dbname=" + db.config.getDBName() +
-	 " port=" + db.config.getPort() + " sslmode" + db.config.getSSLMode() + 
+	 " port=" + db.config.getPort() + " sslmode=" + db.config.getSSLMode() + 
 	 " timezone=" + db.config.getTimezone() 
 }
 
 func (db *Database) OpenConnection() (*gorm.DB, error) {
    // инициализируем коннекшен
+   log.Println(db.getDsnString())
    conn, err := gorm.Open(postgres.New(postgres.Config{
 	DriverName: "postgres",
 	DSN: db.getDsnString(),
