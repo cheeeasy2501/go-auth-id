@@ -32,3 +32,8 @@ func (s *HTTPServer) StartHTTPServer() {
 
 	srv.ListenAndServe()
 }
+
+
+type Response struct {
+     errors *string
+}

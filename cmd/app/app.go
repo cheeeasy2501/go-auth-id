@@ -6,11 +6,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	cfg "github.com/cheeeasy2501/auth-id/config/app"
-	ctlr "github.com/cheeeasy2501/auth-id/internal/controller/app"
-	srvs "github.com/cheeeasy2501/auth-id/internal/service/app"
+	cfg "github.com/cheeeasy2501/auth-id/config"
+	ctlr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/controller"
+	srvs "github.com/cheeeasy2501/auth-id/internal/service"
 
-	"github.com/cheeeasy2501/auth-id/package/server"
+	"github.com/cheeeasy2501/auth-id/pkg/server"
 )
 
 func Run(ctx context.Context, log *log.Logger, config *cfg.Config, conn *gorm.DB) {
@@ -22,8 +22,7 @@ func Run(ctx context.Context, log *log.Logger, config *cfg.Config, conn *gorm.DB
 
 	v1 := router.Group("/v1")
 	{
-		v1.POST("/login", controllers.Authorization.LoginByEmail)
-		// v1.POST("/register", controllers.Authorization.Register)
+		controllers.RegisterRoutes(v1)
 	}
 
 	httpServer.StartHTTPServer()

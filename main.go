@@ -9,9 +9,9 @@ import (
    "os/signal"
 	"syscall"
 
-	app "github.com/cheeeasy2501/auth-id/cmd/app"
-   cfg "github.com/cheeeasy2501/auth-id/config/app"
-   "github.com/cheeeasy2501/auth-id/package/database"
+	"github.com/cheeeasy2501/auth-id/cmd/app"
+   cfg "github.com/cheeeasy2501/auth-id/config"
+   "github.com/cheeeasy2501/auth-id/pkg/database"
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 
    conn, err := db.OpenConnection()
    if err != nil {
-      logger.Fatal("Connection isn't opened!")
+      logger.Fatal("Connection isn't opened!", err)
    }
    defer db.CloseConnection()
    logger.Infoln("Database connection is opened")
@@ -48,8 +48,4 @@ func main() {
    logger.Infoln("Application is started")
 
    <-ctx.Done()
-}
-
-func NewServices() {
-	panic("unimplemented")
 }

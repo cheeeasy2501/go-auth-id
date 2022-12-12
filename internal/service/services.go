@@ -1,7 +1,7 @@
-package app
+package service
 
 import (
-	cfg "github.com/cheeeasy2501/auth-id/config/app"
+	cfg "github.com/cheeeasy2501/auth-id/config"
 	"gorm.io/gorm"
 )
 

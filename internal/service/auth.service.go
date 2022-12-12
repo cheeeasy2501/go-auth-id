@@ -1,4 +1,4 @@
-package app
+package service
 
 import (
 	"encoding/base64"
@@ -9,7 +9,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	entity "github.com/cheeeasy2501/auth-id/internal/entity/app"
+	"github.com/cheeeasy2501/auth-id/internal/entity"
+	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/request"
 )
 
 type Claims struct {
@@ -18,68 +19,68 @@ type Claims struct {
 }
 
 type IAuthorizationService interface {
-	// Registration(email, password)
-	LoginByEmail(email, password string) (entity.UserEntity, error)
+	Registration(registration *request.RegistrationRequest) error
+	LoginByEmail(email, password string) (entity.User, error)
 	Logout()
 
-	GenerateToken(user *entity.UserEntity) (string, error)
+	GenerateToken(user *entity.User) (string, error)
 	ParseToken(accessToken string) (uint, error)
 	HashPassword(password string) ([]byte, error)
 	VerifyPassword(userPass, credentialsPass string) error
 }
 
 type AuthorizationService struct {
-	conn        *gorm.DB
+	conn      *gorm.DB
 	secretKey string
 }
 
 func NewAuthorizationService(secretKey string, conn *gorm.DB) *AuthorizationService {
 	return &AuthorizationService{
 		secretKey: secretKey,
-		conn:        conn,
+		conn:      conn,
 	}
 }
 
-func (s *AuthorizationService) Registration(user *entity.UserEntity) (string, error) {
+func (s *AuthorizationService) Registration(request *request.RegistrationRequest) error {
 
-	hashPassword, err := s.HashPassword(user.Password())
+	hashPassword, err := s.HashPassword(request.Password)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	encryptedPass := base64.StdEncoding.EncodeToString(hashPassword)
-	user.SetPassword(encryptedPass)
+	request.Password = encryptedPass
 
-	tx := s.conn.First(user, "email = $1", user.Email)
-	if tx.RowsAffected > 0 {
-		return "", errors.New("User already exist")
+	user := entity.NewUserFromRegistrationRequest(*request)
+
+	result := s.conn.First(&user, "email = ?", user.Email)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return err
 	}
 
-	tx = s.conn.Create(user)
-	if tx.RowsAffected == 0 {
-        return "", errors.New("User not created")
+	if result.RowsAffected != 1 {
+		return errors.New("User already exist")
 	}
 
-	token, err := s.GenerateToken(user)
+	err = s.conn.Create(&user).Error
 	if err != nil {
-		return  "", err
+		return errors.New("User not created")
 	}
 
-	return token, nil
+	return nil
 }
 
-func (s *AuthorizationService) LoginByEmail(email, password string) (entity.UserEntity, error) {
-	user := entity.NewUserEntity()
+func (s *AuthorizationService) LoginByEmail(email, password string) (entity.User, error) {
+	user := entity.NewUser()
 	tx := s.conn.First(&user, "email = $1", email)
 
 	if tx.RowsAffected == 0 {
-		return entity.UserEntity{}, errors.New("Login or password not found")
+		return entity.User{}, errors.New("Login or password not found")
 	}
 
-	if err := s.VerifyPassword(user.Password(), password); err != nil {
-		return entity.UserEntity{}, err
+	if err := s.VerifyPassword(user.Password, password); err != nil {
+		return entity.User{}, err
 	}
-
 
 	return user, nil
 }
@@ -88,7 +89,7 @@ func (s *AuthorizationService) Logout() {
 
 }
 
-func (s *AuthorizationService) GenerateToken(usr *entity.UserEntity) (string, error) {
+func (s *AuthorizationService) GenerateToken(usr *entity.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(1))),

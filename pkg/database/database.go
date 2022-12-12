@@ -40,6 +40,10 @@ func (db *Database) OpenConnection() (*gorm.DB, error) {
 	DriverName: "postgres",
 	DSN: db.getDsnString(),
   }))
+  
+  if err != nil {
+	return nil, err
+  }
 
   sqlDB, err := conn.DB()
 

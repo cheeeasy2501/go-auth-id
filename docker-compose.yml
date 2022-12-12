@@ -27,6 +27,7 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
     volumes:
       - ../auth-id-postgres-data:/var/lib/postgresql/data
+      - ./migration:/opt/migration
     ports:
       - "5432:5432"
     healthcheck:

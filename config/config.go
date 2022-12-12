@@ -1,6 +1,6 @@
 package app
 
-import "github.com/cheeeasy2501/auth-id/package/database"
+import "github.com/cheeeasy2501/auth-id/pkg/database"
 
 type Config struct {
 	Authorization IAuthorizationConfig
