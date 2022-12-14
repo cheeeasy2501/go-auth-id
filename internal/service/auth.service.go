@@ -13,14 +13,22 @@ import (
 	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/request"
 )
 
+type UserClaims struct {
+	Id         uint   `json:"id"`
+	Avatar     string `json:"avatar"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	MiddleName string `json:"middle_name"`
+}
+
 type Claims struct {
 	jwt.RegisteredClaims
-	UserId uint `json:"user_id"`
+	UserClaims `json:"user"`
 }
 
 type IAuthorizationService interface {
-	Registration(registration *request.RegistrationRequest) error
-	LoginByEmail(email, password string) (entity.User, error)
+	Registration(request *request.RegistrationRequest) error
+	LoginByEmail(request *request.LoginByEmailRequest) (string, error)
 	Logout()
 
 	GenerateToken(user *entity.User) (string, error)
@@ -58,7 +66,7 @@ func (s *AuthorizationService) Registration(request *request.RegistrationRequest
 		return err
 	}
 
-	if result.RowsAffected != 1 {
+	if result.RowsAffected > 0 {
 		return errors.New("User already exist")
 	}
 
@@ -70,19 +78,24 @@ func (s *AuthorizationService) Registration(request *request.RegistrationRequest
 	return nil
 }
 
-func (s *AuthorizationService) LoginByEmail(email, password string) (entity.User, error) {
+func (s *AuthorizationService) LoginByEmail(request *request.LoginByEmailRequest) (string, error) {
 	user := entity.NewUser()
-	tx := s.conn.First(&user, "email = $1", email)
+	tx := s.conn.First(&user, "email = $1", request.Email)
 
 	if tx.RowsAffected == 0 {
-		return entity.User{}, errors.New("Login or password not found")
+		return "", errors.New("Login or password not found")
 	}
 
-	if err := s.VerifyPassword(user.Password, password); err != nil {
-		return entity.User{}, err
+	if err := s.VerifyPassword(user.Password, request.Password); err != nil {
+		return "", err
 	}
 
-	return user, nil
+	token, err := s.GenerateToken(&user)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
 func (s *AuthorizationService) Logout() {
@@ -95,7 +108,13 @@ func (s *AuthorizationService) GenerateToken(usr *entity.User) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(1))),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
-		UserId: usr.ID,
+		UserClaims: UserClaims{
+			Id:         usr.ID,
+			Avatar:     usr.Avatar,
+			FirstName:  usr.FirstName,
+			LastName:   usr.LastName,
+			MiddleName: usr.MiddleName,
+		},
 	})
 
 	return token.SignedString([]byte(s.secretKey))
@@ -118,7 +137,7 @@ func (s *AuthorizationService) ParseToken(accessToken string) (uint, error) {
 		return 0, err
 	}
 
-	return claims.UserId, nil
+	return claims.Id, nil
 }
 
 func (s *AuthorizationService) HashPassword(password string) ([]byte, error) {

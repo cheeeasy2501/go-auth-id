@@ -5,6 +5,8 @@ import (
 
 	"github.com/cheeeasy2501/auth-id/internal/service"
 	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/request"
+	srv "github.com/cheeeasy2501/auth-id/pkg/server"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,8 +27,22 @@ func NewAuthorizationController(s *service.Services) *AuthorizationController {
 }
 
 func (c *AuthorizationController) LoginByEmail(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"token": "123",
+	request := new(request.LoginByEmailRequest)
+	err := ctx.ShouldBindJSON(request)
+
+	if err != nil {
+		srv.ErrorResponse(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	token, err := c.Authorization.LoginByEmail(request)
+	if err != nil {
+		srv.ErrorResponse(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	srv.Response(ctx, http.StatusOK, gin.H{
+		"token": token,
 	})
 }
 
@@ -35,22 +51,17 @@ func (c *AuthorizationController) Registration(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(request)
 
 	if err != nil {
-		ctx.JSON(http.StatusOK, gin.H{
-			"error": err,
-		})
-		ctx.Abort()
+		srv.ErrorResponse(ctx, http.StatusBadRequest, err)
+		return
 	}
 
 	err = c.Authorization.Registration(request)
 	if err != nil {
-		ctx.JSON(http.StatusOK, gin.H{
-			"error": err,
-		})
-		ctx.Abort()
+		srv.ErrorResponse(ctx, http.StatusBadRequest, err)
+		return
 	}
 
-	ctx.JSON(http.StatusCreated, nil)
-	return
+	srv.Response(ctx, http.StatusCreated, nil)
 }
 
 func (c *AuthorizationController) RegisterRoutes(group *gin.RouterGroup) {
