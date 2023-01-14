@@ -19,7 +19,7 @@ func main() {
 	logger := log.New()
 
 	// инициализируем .env
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("env.local"); err != nil {
 		logger.Fatal("No .env file found")
 	}
 
@@ -40,8 +40,6 @@ func main() {
    ctx, cancel := signal.NotifyContext(ctx.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-   // Инициализируем  репозитории, сервисы, мб GRPC-сервис
-  // services := NewServices()
 	//  стартуем приложение
    logger.Infoln("Starting application")
 	app.Run(ctx, logger, config, conn)

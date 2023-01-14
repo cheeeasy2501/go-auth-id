@@ -11,7 +11,8 @@ RUN apk update && apk add --no-cache git ca-certificates tzdata && update-ca-cer
 
 WORKDIR $GOPATH/src/app/
 COPY . .
-#COPY ./.env /go/.env
+COPY ./env.local /go/auth-id/env.local
+# COPY ./build/app/a.test /go/auth-id/a.test
 
 # Fetch dependencies.
 RUN go get -d -v ./
@@ -19,12 +20,12 @@ RUN go get -d -v ./
 # Build the binary
 RUN CGO_ENABLED=1 GOOS=linux go build -o /go/auth-id/main -a -ldflags '-linkmode external -extldflags "-static"' ./
 
-RUN ls -la
 ############################
 # STEP 2 build a small image
 ############################
 FROM scratch
-WORKDIR /go
+# FROM golang:alpine3.15
+#WORKDIR /go/auth-id
 
 # Import from builder.
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
@@ -34,7 +35,8 @@ COPY --from=builder /etc/group /etc/group
 
 # Copy our static executable
 COPY --from=builder /go/auth-id/ /go/auth-id/
-COPY --from=builder /go/auth-id/env /go/auth-id/.env
+COPY --from=builder /go/auth-id/env.local /go/auth-id/.env
+# COPY --from=builder /go/auth-id/a.test /go/auth-id/a.test
 
 # Run the binary.
 ENTRYPOINT ["/go/auth-id/main"]
