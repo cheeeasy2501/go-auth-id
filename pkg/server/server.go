@@ -33,7 +33,27 @@ func (s *HTTPServer) StartHTTPServer() {
 	srv.ListenAndServe()
 }
 
+func Response(ctx *gin.Context, status int, data interface{}) {
 
-type Response struct {
-     errors *string
+	switch v := data.(type) {
+	case nil:
+		ctx.Status(status)
+	default:
+		ctx.JSON(status, v)
+	}
+}
+
+func ErrorResponse(ctx *gin.Context, status int, err error) {
+	errs := TransformErrorMessage(err)
+
+	if len(errs) == 0 {
+		ctx.AbortWithStatusJSON(status,  gin.H{
+			"error": err.Error(),
+		})
+		return
+	} 
+
+	ctx.AbortWithStatusJSON(status, gin.H{
+		"errors": errs,
+	})
 }

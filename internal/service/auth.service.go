@@ -13,18 +13,36 @@ import (
 	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/request"
 )
 
+type UserClaims struct {
+	Id         uint   `json:"id"`
+	Avatar     string `json:"avatar"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	MiddleName string `json:"middle_name"`
+}
+
 type Claims struct {
 	jwt.RegisteredClaims
-	UserId uint `json:"user_id"`
+	UserClaims `json:"user"`
+}
+
+type RefreshClaims struct {
+	jwt.RegisteredClaims
+	Id uint `json:"id"`
+}
+
+type ITokenService interface {
+	generateAccessToken(user *entity.User) (string, error)
+	generateRefreshToken(userId uint) (string, error)
+	ParseToken(t string) (uint, error)
+	RefreshTokens(request *request.RefreshTokens) (entity.Tokens, error)
 }
 
 type IAuthorizationService interface {
-	Registration(registration *request.RegistrationRequest) error
-	LoginByEmail(email, password string) (entity.User, error)
+	ITokenService
+	Registration(request *request.RegistrationRequest) error
+	LoginByEmail(request *request.LoginByEmailRequest) (entity.Tokens, error)
 	Logout()
-
-	GenerateToken(user *entity.User) (string, error)
-	ParseToken(accessToken string) (uint, error)
 	HashPassword(password string) ([]byte, error)
 	VerifyPassword(userPass, credentialsPass string) error
 }
@@ -58,7 +76,7 @@ func (s *AuthorizationService) Registration(request *request.RegistrationRequest
 		return err
 	}
 
-	if result.RowsAffected != 1 {
+	if result.RowsAffected > 0 {
 		return errors.New("User already exist")
 	}
 
@@ -70,39 +88,75 @@ func (s *AuthorizationService) Registration(request *request.RegistrationRequest
 	return nil
 }
 
-func (s *AuthorizationService) LoginByEmail(email, password string) (entity.User, error) {
+func (s *AuthorizationService) LoginByEmail(request *request.LoginByEmailRequest) (entity.Tokens, error) {
 	user := entity.NewUser()
-	tx := s.conn.First(&user, "email = $1", email)
+	tx := s.conn.First(&user, "email = $1", request.Email)
 
 	if tx.RowsAffected == 0 {
-		return entity.User{}, errors.New("Login or password not found")
+		return entity.Tokens{}, errors.New("Login or password not found")
 	}
 
-	if err := s.VerifyPassword(user.Password, password); err != nil {
-		return entity.User{}, err
+	if err := s.VerifyPassword(user.Password, request.Password); err != nil {
+		return entity.Tokens{}, err
 	}
 
-	return user, nil
+	accessToken, err := s.generateAccessToken(&user)
+	if err != nil {
+		return entity.Tokens{}, err
+	}
+
+	refreshToken, err := s.generateRefreshToken(user.ID)
+	if err != nil {
+		return entity.Tokens{}, err
+	}
+
+	tokens := entity.Tokens{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	return tokens, nil
 }
 
 func (s *AuthorizationService) Logout() {
 
 }
 
-func (s *AuthorizationService) GenerateToken(usr *entity.User) (string, error) {
+// Генерируем access token
+func (s *AuthorizationService) generateAccessToken(usr *entity.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(1))),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
-		UserId: usr.ID,
+		UserClaims: UserClaims{
+			Id:         usr.ID,
+			Avatar:     usr.Avatar,
+			FirstName:  usr.FirstName,
+			LastName:   usr.LastName,
+			MiddleName: usr.MiddleName,
+		},
 	})
 
 	return token.SignedString([]byte(s.secretKey))
 }
 
-func (s *AuthorizationService) ParseToken(accessToken string) (uint, error) {
-	token, err := jwt.ParseWithClaims(accessToken, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+// Генерируем refresh token
+func (s *AuthorizationService) generateRefreshToken(userId uint) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &RefreshClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 30)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+		Id: userId,
+	})
+
+	return token.SignedString([]byte(s.secretKey))
+}
+
+// Парсим и валидируем токен
+func (s *AuthorizationService) ParseToken(t string) (uint, error) {
+	token, err := jwt.ParseWithClaims(t, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("Invalid method")
 		}
@@ -118,9 +172,10 @@ func (s *AuthorizationService) ParseToken(accessToken string) (uint, error) {
 		return 0, err
 	}
 
-	return claims.UserId, nil
+	return claims.Id, nil
 }
 
+// Хэшируем пароль в bcrypt
 func (s *AuthorizationService) HashPassword(password string) ([]byte, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -130,6 +185,7 @@ func (s *AuthorizationService) HashPassword(password string) ([]byte, error) {
 	return bytes, err
 }
 
+// Проверка пароля
 func (s *AuthorizationService) VerifyPassword(userPass, credentialsPass string) error {
 	comparePass, err := base64.StdEncoding.DecodeString(userPass)
 	if err != nil {
@@ -145,4 +201,35 @@ func (s *AuthorizationService) VerifyPassword(userPass, credentialsPass string) 
 	}
 
 	return nil
+}
+
+// Возвращаем обновленные токены
+func (s *AuthorizationService) RefreshTokens(request *request.RefreshTokens) (entity.Tokens, error) {
+	newTokens := new(entity.Tokens)
+	usrId, err:= s.ParseToken(request.AccessToken)
+	if err != nil {
+		return *newTokens, err
+	}
+
+	usr := new(entity.User)
+	tx:= s.conn.First(usr, "id = ?", usrId)
+
+	if tx.RowsAffected == 0 {
+		return *newTokens, errors.New("Invalid request") // TODO: to apperrors
+	}
+
+	accessToken, err := s.generateAccessToken(usr)
+	if err != nil {
+		return *newTokens, errors.New("Invalid request") // TODO: to apperrors
+	}
+
+	refreshToken, err := s.generateRefreshToken(usr.ID)
+	if err != nil {
+		return *newTokens, errors.New("Invalid request") // TODO: to apperrors
+	}
+
+	newTokens.AccessToken = accessToken
+	newTokens.RefreshToken = refreshToken
+
+	return *newTokens, nil
 }

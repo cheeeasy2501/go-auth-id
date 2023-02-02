@@ -1,24 +1,24 @@
 version: "3.9"
 services:
-  app:
-    build:
-      context: .
-      dockerfile: build/app/Dockerfile
-    container_name: auth-id-app
-    env_file: .env
-    ports:
-      - "9090:9090"
-    depends_on:
-      - postgres-master
-
-   # volumes:
-    #  - ./:./go/auth-id
-    networks:
-      - services
+  # app:
+  #   env_file: .env
+  #   build:
+  #     context: .
+  #     dockerfile: build/app/Dockerfile
+  #   container_name: auth-id-app
+  #   ports:
+  #     - "9090:9090"
+  #   depends_on:
+  #     - postgres-master
+  #   # volumes:
+  #     #     - ./.env:./go/auth-id/.env
+  #     # - ./:./
+  #   networks:
+  #     - services
   postgres-master:
+    env_file: .env
     image: postgres:15
     container_name: auth-id-postgres
-    env_file: .env
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_DB: ${POSTGRES_DB}
