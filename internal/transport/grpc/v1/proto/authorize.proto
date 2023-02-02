@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "/pb";
+
+
+message CheckTokenRequest {
+    string token = 1;
+}
+
+message CheckTokenResponse {
+    bool authorize = 1; 
+    uint64 userId = 2;
+}
+
+message GetUserInformationRequest {
+    uint64 userId = 1;
+}
+
+message GetUserResponse {
+    string Avatar = 1;
+	string FirstName = 2;
+	string LastName = 3;
+	string MiddleName = 4;
+	string Email = 5;
+}
+
+service AuthService {
+    rpc CheckToken(CheckTokenRequest) returns (CheckTokenResponse); 
+    rpc GetUserInformation(GetUserInformationRequest) returns (GetUserResponse);
+}
+

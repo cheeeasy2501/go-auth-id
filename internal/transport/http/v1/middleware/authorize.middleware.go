@@ -23,7 +23,7 @@ func NewJWTMiddleware(s service.ITokenService) *JWTMiddleware {
 // Проверяет токен
 func (m *JWTMiddleware) Authorize() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		header := ctx.GetHeader("Autorization")
+		header := ctx.GetHeader("Authorization")
 		if header == "" {
 			server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Unauthorized"))
 			return

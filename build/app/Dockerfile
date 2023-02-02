@@ -12,7 +12,6 @@ RUN apk update && apk add --no-cache git ca-certificates tzdata && update-ca-cer
 WORKDIR $GOPATH/src/app/
 COPY . .
 COPY ./env.local /go/auth-id/env.local
-# COPY ./build/app/a.test /go/auth-id/a.test
 
 # Fetch dependencies.
 RUN go get -d -v ./
@@ -36,7 +35,6 @@ COPY --from=builder /etc/group /etc/group
 # Copy our static executable
 COPY --from=builder /go/auth-id/ /go/auth-id/
 COPY --from=builder /go/auth-id/env.local /go/auth-id/.env
-# COPY --from=builder /go/auth-id/a.test /go/auth-id/a.test
 
 # Run the binary.
 ENTRYPOINT ["/go/auth-id/main"]
