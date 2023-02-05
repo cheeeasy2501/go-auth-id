@@ -4,7 +4,7 @@
 // - protoc             v3.21.12
 // source: authorize.proto
 
-package pb
+package authorization
 
 import (
 	context "context"
@@ -36,7 +36,7 @@ func NewAuthServiceClient(cc grpc.ClientConnInterface) AuthServiceClient {
 
 func (c *authServiceClient) CheckToken(ctx context.Context, in *CheckTokenRequest, opts ...grpc.CallOption) (*CheckTokenResponse, error) {
 	out := new(CheckTokenResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/CheckToken", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/authorization.AuthService/CheckToken", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (c *authServiceClient) CheckToken(ctx context.Context, in *CheckTokenReques
 
 func (c *authServiceClient) GetUserInformation(ctx context.Context, in *GetUserInformationRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
 	out := new(GetUserResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/GetUserInformation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/authorization.AuthService/GetUserInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func _AuthService_CheckToken_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.AuthService/CheckToken",
+		FullMethod: "/authorization.AuthService/CheckToken",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).CheckToken(ctx, req.(*CheckTokenRequest))
@@ -112,7 +112,7 @@ func _AuthService_GetUserInformation_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.AuthService/GetUserInformation",
+		FullMethod: "/authorization.AuthService/GetUserInformation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).GetUserInformation(ctx, req.(*GetUserInformationRequest))
@@ -124,7 +124,7 @@ func _AuthService_GetUserInformation_Handler(srv interface{}, ctx context.Contex
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AuthService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "pb.AuthService",
+	ServiceName: "authorization.AuthService",
 	HandlerType: (*AuthServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

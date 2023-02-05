@@ -13,7 +13,7 @@ import (
 	ctlr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/controller"
 	mwr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/middleware"
 
-	"github.com/cheeeasy2501/auth-id/pkg/pb"
+	pb "github.com/cheeeasy2501/auth-id/pb/authorization"
 	"github.com/cheeeasy2501/auth-id/pkg/server"
 	"google.golang.org/grpc"
 )
@@ -42,10 +42,10 @@ func Run(ctx context.Context, log *log.Logger, config *cfg.Config, conn *gorm.DB
 
 func runGRPCServer() {
 	grpcServer := grpc.NewServer()
-	srv := &pb.GRPCServer{}
+	srv := &pb.AuthorizeGRPCServer{}
 	pb.RegisterAuthServiceServer(grpcServer, srv)
 
-	l, err := net.Listen("tcp", ":8080")
+	l, err := net.Listen("tcp", ":9091")
 	if err != nil {
 		log.Fatal(err)
 	}
