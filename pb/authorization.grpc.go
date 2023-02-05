@@ -2,9 +2,18 @@ package pb
 
 import (
 	context "context"
+
+	srvs "github.com/cheeeasy2501/internal/service"
 )
 
 type AuthorizationGRPCServer struct {
+	authorizationService srvs.IAuthorizationService
+}
+
+func NewAUthorizationGRPCServer(authorizationService srvs.IAuthorizationService) *AuthorizationGRPCServer {
+	return &AuthorizationGRPCServer{
+		authorizationService: authorizationService,
+	}
 }
 
 // mustEmbedUnimplementedAuthorizationServiceServer implements AuthorizationServiceServer
