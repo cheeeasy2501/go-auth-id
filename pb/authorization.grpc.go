@@ -1,8 +1,7 @@
-package v1
+package pb
 
 import (
 	context "context"
-	"github.com/cheeeasy2501/pb"
 )
 
 type AuthorizationGRPCServer struct {
@@ -13,15 +12,15 @@ func (s *AuthorizationGRPCServer) mustEmbedUnimplementedAuthorizationServiceServ
 }
 
 // TODO: mock
-func (s *AuthorizationGRPCServer) CheckToken(ctx context.Context, in *pb.CheckTokenRequest) (*pb.CheckTokenResponse, error) {
-	return &pb.CheckTokenResponse{
+func (s *AuthorizationGRPCServer) CheckToken(ctx context.Context, in *CheckTokenRequest) (*CheckTokenResponse, error) {
+	return &CheckTokenResponse{
 		Authorize: true,
 		UserId:    1,
 	}, nil
 }
 
-func (s *AuthorizationGRPCServer) GetUserInformation(ctx context.Context, in *pb.GetUserInformationRequest) (*pb.GetUserResponse, error) {
-	return &pb.GetUserResponse{
+func (s *AuthorizationGRPCServer) GetUserInformation(ctx context.Context, in *GetUserInformationRequest) (*GetUserResponse, error) {
+	return &GetUserResponse{
 		Avatar:     "test",
 		FirstName:  "test",
 		LastName:   "test",
