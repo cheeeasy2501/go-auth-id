@@ -1,25 +1,26 @@
-package authorization
+package v1
 
 import (
 	context "context"
-	pb "github.com/cheeeasy2501/pb/authorization"
+	"github.com/cheeeasy2501/pb"
 )
 
-type AuthorizeGRPCServer struct {
+type AuthorizationGRPCServer struct {
 }
 
-func (s *AuthorizeGRPCServer) mustEmbedUnimplementedAuthServiceServer() {
+// mustEmbedUnimplementedAuthorizationServiceServer implements AuthorizationServiceServer
+func (s *AuthorizationGRPCServer) mustEmbedUnimplementedAuthorizationServiceServer() {
 }
 
 // TODO: mock
-func (s *AuthorizeGRPCServer) CheckToken(ctx context.Context, in *pb.CheckTokenRequest) (*CheckTokenResponse, error) {
+func (s *AuthorizationGRPCServer) CheckToken(ctx context.Context, in *pb.CheckTokenRequest) (*pb.CheckTokenResponse, error) {
 	return &pb.CheckTokenResponse{
 		Authorize: true,
 		UserId:    1,
 	}, nil
 }
 
-func (s *AuthorizeGRPCServer) GetUserInformation(ctx context.Context, in *GetUserInformationRequest) (*GetUserResponse, error) {
+func (s *AuthorizationGRPCServer) GetUserInformation(ctx context.Context, in *pb.GetUserInformationRequest) (*pb.GetUserResponse, error) {
 	return &pb.GetUserResponse{
 		Avatar:     "test",
 		FirstName:  "test",
