@@ -21,7 +21,7 @@ func (s *HTTPServer) GetRouter() *gin.Engine {
 	return s.router
 }
 
-func (s *HTTPServer) StartHTTPServer() {
+func (s *HTTPServer) StartHTTPServer() error {
 	srv := &http.Server{
 		Addr:           ":9090",
 		Handler:        s.router,
@@ -30,11 +30,15 @@ func (s *HTTPServer) StartHTTPServer() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	srv.ListenAndServe()
+	err := srv.ListenAndServe()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func Response(ctx *gin.Context, status int, data interface{}) {
-
 	switch v := data.(type) {
 	case nil:
 		ctx.Status(status)

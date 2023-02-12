@@ -1,9 +1,10 @@
 syntax = "proto3";
 
-package pb;
+package gen;
 
-option go_package = "/pb";
+option go_package = "/authorization";
 
+import "google/api/annotations.proto";
 
 message CheckTokenRequest {
     string token = 1;
@@ -27,7 +28,13 @@ message GetUserResponse {
 }
 
 service AuthorizationService {
-    rpc CheckToken(CheckTokenRequest) returns (CheckTokenResponse); 
+    rpc CheckToken(CheckTokenRequest) returns (CheckTokenResponse) {
+        option (google.api.http) = {
+            post: "/v1/auth/check-token"
+            body: "*"
+        };
+    } 
+
     rpc GetUserInformation(GetUserInformationRequest) returns (GetUserResponse);
 }
 

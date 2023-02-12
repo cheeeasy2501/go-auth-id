@@ -35,7 +35,8 @@ type ITokenService interface {
 	generateAccessToken(user *entity.User) (string, error)
 	generateRefreshToken(userId uint) (string, error)
 	ParseToken(t string) (uint, error)
-	RefreshTokens(request *request.RefreshTokens) (entity.Tokens, error)
+	ParseRefreshToken(t string) (uint, error)
+	RefreshToken(request *request.RefreshTokenRequest) (entity.Tokens, error)
 }
 
 type IAuthorizationService interface {
@@ -175,6 +176,26 @@ func (s *AuthorizationService) ParseToken(t string) (uint, error) {
 	return claims.Id, nil
 }
 
+func (s *AuthorizationService) ParseRefreshToken(t string) (uint, error) {
+	token, err := jwt.ParseWithClaims(t, &RefreshClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("Invalid method")
+		}
+		return []byte(s.secretKey), nil
+	})
+
+	if err != nil {
+		return 0, errors.New("Unathorized")
+	}
+
+	claims, ok := token.Claims.(*RefreshClaims)
+	if !ok {
+		return 0, err
+	}
+
+	return claims.Id, nil
+}
+
 // Хэшируем пароль в bcrypt
 func (s *AuthorizationService) HashPassword(password string) ([]byte, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -204,15 +225,10 @@ func (s *AuthorizationService) VerifyPassword(userPass, credentialsPass string) 
 }
 
 // Возвращаем обновленные токены
-func (s *AuthorizationService) RefreshTokens(request *request.RefreshTokens) (entity.Tokens, error) {
+func (s *AuthorizationService) RefreshToken(request *request.RefreshTokenRequest) (entity.Tokens, error) {
 	newTokens := new(entity.Tokens)
-	usrId, err:= s.ParseToken(request.AccessToken)
-	if err != nil {
-		return *newTokens, err
-	}
-
 	usr := new(entity.User)
-	tx:= s.conn.First(usr, "id = ?", usrId)
+	tx := s.conn.First(usr, "id = ?", request.UserId)
 
 	if tx.RowsAffected == 0 {
 		return *newTokens, errors.New("Invalid request") // TODO: to apperrors

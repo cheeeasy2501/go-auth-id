@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.12
-// source: authorization.proto
+// source: proto/authorization.proto
 
-package pb
+package authorization
 
 import (
 	context "context"
@@ -36,7 +36,7 @@ func NewAuthorizationServiceClient(cc grpc.ClientConnInterface) AuthorizationSer
 
 func (c *authorizationServiceClient) CheckToken(ctx context.Context, in *CheckTokenRequest, opts ...grpc.CallOption) (*CheckTokenResponse, error) {
 	out := new(CheckTokenResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthorizationService/CheckToken", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gen.AuthorizationService/CheckToken", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (c *authorizationServiceClient) CheckToken(ctx context.Context, in *CheckTo
 
 func (c *authorizationServiceClient) GetUserInformation(ctx context.Context, in *GetUserInformationRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
 	out := new(GetUserResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthorizationService/GetUserInformation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gen.AuthorizationService/GetUserInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func _AuthorizationService_CheckToken_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.AuthorizationService/CheckToken",
+		FullMethod: "/gen.AuthorizationService/CheckToken",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthorizationServiceServer).CheckToken(ctx, req.(*CheckTokenRequest))
@@ -112,7 +112,7 @@ func _AuthorizationService_GetUserInformation_Handler(srv interface{}, ctx conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.AuthorizationService/GetUserInformation",
+		FullMethod: "/gen.AuthorizationService/GetUserInformation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthorizationServiceServer).GetUserInformation(ctx, req.(*GetUserInformationRequest))
@@ -124,7 +124,7 @@ func _AuthorizationService_GetUserInformation_Handler(srv interface{}, ctx conte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AuthorizationService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "pb.AuthorizationService",
+	ServiceName: "gen.AuthorizationService",
 	HandlerType: (*AuthorizationServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -137,5 +137,5 @@ var AuthorizationService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "authorization.proto",
+	Metadata: "proto/authorization.proto",
 }

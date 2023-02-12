@@ -9,8 +9,9 @@ import (
 
 	cfg "github.com/cheeeasy2501/auth-id/config"
 	srvs "github.com/cheeeasy2501/auth-id/internal/service"
-	"github.com/cheeeasy2501/auth-id/pb"
 
+	auth_gen "github.com/cheeeasy2501/auth-id/gen/authorization"
+	auth_grpc "github.com/cheeeasy2501/auth-id/internal/transport/grpc/v1/authorization"
 	ctlr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/controller"
 	mwr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/middleware"
 
@@ -18,8 +19,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Запуск приложения
 func Run(ctx context.Context, log *log.Logger, config *cfg.Config, conn *gorm.DB) {
-
 	httpServer := server.NewHTTPServer()
 	router := httpServer.GetRouter()
 	services := srvs.NewService(config, conn)
@@ -30,27 +31,37 @@ func Run(ctx context.Context, log *log.Logger, config *cfg.Config, conn *gorm.DB
 	{
 		auth.POST("/login", controllers.Authorization.LoginByEmail)
 		auth.POST("/registration", controllers.Authorization.Registration) // отправляю письмо на email?
-		auth.POST("/refresh-tokens", middleware.Jwtm.Authorize(), controllers.Authorization.RefreshTokens)
+		auth.POST("/refresh-token", middleware.Jwtm.CheckRefreshToken(), controllers.Authorization.RefreshToken)
 	}
 
 	go func() {
-		runGRPCServer()
+		err := startGRPCServer()
+		if err != nil {
+			panic("GRPC is't started!")
+		}
 	}()
-
-	httpServer.StartHTTPServer()
+	go func() {
+		err := httpServer.StartHTTPServer()
+		if err != nil {
+			panic("HTTP is't started!")
+		}
+	}()
 }
 
-func runGRPCServer() {
+// Запуск GRPC
+func startGRPCServer() error {
 	grpcServer := grpc.NewServer()
-	srv := &pb.AuthorizationGRPCServer{}
-	pb.RegisterAuthorizationServiceServer(grpcServer, srv)
+	srv := &auth_grpc.AuthorizationGRPCServer{}
+	auth_gen.RegisterAuthorizationServiceServer(grpcServer, srv)
 
 	l, err := net.Listen("tcp", ":9091")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if err := grpcServer.Serve(l); err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }

@@ -45,4 +45,6 @@ func main() {
    logger.Infoln("Application is started")
 
    <-ctx.Done()
+
+   logger.Infoln("Application stopped")
 }
