@@ -36,7 +36,6 @@ func main() {
    defer db.CloseConnection()
    logger.Infoln("Database connection is opened")
 
-   
    ctx, cancel := signal.NotifyContext(ctx.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
@@ -46,4 +45,6 @@ func main() {
    logger.Infoln("Application is started")
 
    <-ctx.Done()
+
+   logger.Infoln("Application stopped")
 }

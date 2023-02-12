@@ -23,7 +23,7 @@ func NewJWTMiddleware(s service.ITokenService) *JWTMiddleware {
 // Проверяет токен
 func (m *JWTMiddleware) Authorize() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		header := ctx.GetHeader("Autorization")
+		header := ctx.GetHeader("Authorization")
 		if header == "" {
 			server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Unauthorized"))
 			return
@@ -35,9 +35,36 @@ func (m *JWTMiddleware) Authorize() gin.HandlerFunc {
 			return
 		}
 
-		accessToken := parts[1]
+		token := parts[1]
 
-		userId, err := m.s.ParseToken(accessToken)
+		userId, err := m.s.ParseToken(token)
+		if err != nil {
+			server.ErrorResponse(ctx, http.StatusUnauthorized, err)
+			return
+		}
+
+		ctx.Set("userId", userId)
+	}
+}
+
+// TODO: возможно стоит сделать одну токен-функцию
+func (m *JWTMiddleware) CheckRefreshToken() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		header := ctx.GetHeader("Authorization")
+		if header == "" {
+			server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Unauthorized"))
+			return
+		}
+
+		parts := strings.Split(header, " ")
+		if len(parts) != 2 {
+			server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Invalid token"))
+			return
+		}
+
+		token := parts[1]
+
+		userId, err := m.s.ParseRefreshToken(token)
 		if err != nil {
 			server.ErrorResponse(ctx, http.StatusUnauthorized, err)
 			return

@@ -5,6 +5,7 @@ import (
 
 	"github.com/cheeeasy2501/auth-id/internal/service"
 	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/request"
+	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/response"
 	srv "github.com/cheeeasy2501/auth-id/pkg/server"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,7 @@ import (
 type IAuthorizationController interface {
 	LoginByEmail(ctx *gin.Context)
 	Registration(ctx *gin.Context)
-	RefreshTokens(ctx *gin.Context)
+	RefreshToken(ctx *gin.Context)
 }
 
 type AuthorizationController struct {
@@ -65,23 +66,28 @@ func (c *AuthorizationController) Registration(ctx *gin.Context) {
 	srv.Response(ctx, http.StatusCreated, nil)
 }
 
-func (c *AuthorizationController) RefreshTokens(ctx *gin.Context) {
-	request := new(request.RefreshTokens)
-	err := ctx.ShouldBindJSON(request)
-	if err != nil {
+func (c *AuthorizationController) RefreshToken(ctx *gin.Context) {
+	userIdString, exist := ctx.Get("userId")
+	if exist == false {
 		srv.ErrorResponse(ctx, http.StatusBadRequest, nil)
 		return
 	}
 
-	tokens, err := c.Authorization.RefreshTokens(request)
-	if err != nil {
-		srv.ErrorResponse(ctx, http.StatusBadRequest, err)
+	userId, casted := userIdString.(uint)
+	if casted == false {
+		srv.ErrorResponse(ctx, http.StatusBadRequest, nil)
+		return
 	}
 
-	srv.Response(ctx, http.StatusCreated, gin.H{
-		"accessToken":  tokens.AccessToken,
-		"refreshToken": tokens.RefreshToken,
-	})
+	request := request.NewRefreshTokenRequest(uint64(userId))
+
+	tokens, err := c.Authorization.RefreshToken(request)
+	if err != nil {
+		srv.ErrorResponse(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	srv.Response(ctx, http.StatusCreated, response.NewRefreshTokenResponse(tokens.AccessToken, tokens.RefreshToken))
 }
 
 // func (c *AuthorizationController) RegisterRoutes(group *gin.RouterGroup) {
