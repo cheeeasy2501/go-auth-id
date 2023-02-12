@@ -2,28 +2,66 @@ package app
 
 import (
 	"context"
+	"net"
 
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	cfg "github.com/cheeeasy2501/auth-id/config"
-	ctlr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/controller"
 	srvs "github.com/cheeeasy2501/auth-id/internal/service"
 
+	auth_gen "github.com/cheeeasy2501/auth-id/gen/authorization"
+	auth_grpc "github.com/cheeeasy2501/auth-id/internal/transport/grpc/v1/authorization"
+	ctlr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/controller"
+	mwr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/middleware"
+
 	"github.com/cheeeasy2501/auth-id/pkg/server"
+	"google.golang.org/grpc"
 )
 
+// Запуск приложения
 func Run(ctx context.Context, log *log.Logger, config *cfg.Config, conn *gorm.DB) {
-
 	httpServer := server.NewHTTPServer()
 	router := httpServer.GetRouter()
 	services := srvs.NewService(config, conn)
 	controllers := ctlr.NewController(services)
+	middleware := mwr.NewMiddleware(services.Authorization)
 
-	v1 := router.Group("/v1")
+	auth := router.Group("/v1/auth")
 	{
-		controllers.RegisterRoutes(v1)
+		auth.POST("/login", controllers.Authorization.LoginByEmail)
+		auth.POST("/registration", controllers.Authorization.Registration) // отправляю письмо на email?
+		auth.POST("/refresh-token", middleware.Jwtm.CheckRefreshToken(), controllers.Authorization.RefreshToken)
 	}
 
-	httpServer.StartHTTPServer()
+	go func() {
+		err := startGRPCServer()
+		if err != nil {
+			panic("GRPC is't started!")
+		}
+	}()
+	go func() {
+		err := httpServer.StartHTTPServer()
+		if err != nil {
+			panic("HTTP is't started!")
+		}
+	}()
+}
+
+// Запуск GRPC
+func startGRPCServer() error {
+	grpcServer := grpc.NewServer()
+	srv := &auth_grpc.AuthorizationGRPCServer{}
+	auth_gen.RegisterAuthorizationServiceServer(grpcServer, srv)
+
+	l, err := net.Listen("tcp", ":9091")
+	if err != nil {
+		return err
+	}
+
+	if err := grpcServer.Serve(l); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -19,7 +19,7 @@ func main() {
 	logger := log.New()
 
 	// инициализируем .env
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("env.local"); err != nil {
 		logger.Fatal("No .env file found")
 	}
 
@@ -36,16 +36,15 @@ func main() {
    defer db.CloseConnection()
    logger.Infoln("Database connection is opened")
 
-   
    ctx, cancel := signal.NotifyContext(ctx.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-   // Инициализируем  репозитории, сервисы, мб GRPC-сервис
-  // services := NewServices()
 	//  стартуем приложение
    logger.Infoln("Starting application")
 	app.Run(ctx, logger, config, conn)
    logger.Infoln("Application is started")
 
    <-ctx.Done()
+
+   logger.Infoln("Application stopped")
 }
