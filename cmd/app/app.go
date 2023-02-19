@@ -21,7 +21,7 @@ import (
 
 // Запуск приложения
 func Run(ctx context.Context, log *log.Logger, config *cfg.Config, conn *gorm.DB) {
-	httpServer := server.NewHTTPServer()
+	httpServer := server.NewHTTPServer(config.HTTP)
 	router := httpServer.GetRouter()
 	services := srvs.NewService(config, conn)
 	controllers := ctlr.NewController(services)

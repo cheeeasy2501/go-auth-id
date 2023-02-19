@@ -8,11 +8,13 @@ import (
 )
 
 type HTTPServer struct {
+	config IHTTPConfig
 	router *gin.Engine
 }
 
-func NewHTTPServer() *HTTPServer {
+func NewHTTPServer(cnf IHTTPConfig) *HTTPServer {
 	return &HTTPServer{
+		config: cnf,
 		router: gin.Default(),
 	}
 }
@@ -23,10 +25,10 @@ func (s *HTTPServer) GetRouter() *gin.Engine {
 
 func (s *HTTPServer) StartHTTPServer() error {
 	srv := &http.Server{
-		Addr:           ":9090",
+		Addr:           s.config.GetAddr(),
 		Handler:        s.router,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
+		ReadTimeout:    time.Duration(s.config.GetReadTimeout()) * time.Second,
+		WriteTimeout:   time.Duration(s.config.GetWriteTimeout()) * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 
@@ -51,11 +53,11 @@ func ErrorResponse(ctx *gin.Context, status int, err error) {
 	errs := TransformErrorMessage(err)
 
 	if len(errs) == 0 {
-		ctx.AbortWithStatusJSON(status,  gin.H{
+		ctx.AbortWithStatusJSON(status, gin.H{
 			"error": err.Error(),
 		})
 		return
-	} 
+	}
 
 	ctx.AbortWithStatusJSON(status, gin.H{
 		"errors": errs,
