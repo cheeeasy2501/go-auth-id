@@ -27,8 +27,8 @@ func (s *AuthorizationGRPCServer) CheckToken(ctx context.Context, in *gen.CheckT
 	}, nil
 }
 
-func (s *AuthorizationGRPCServer) GetUserInformation(ctx context.Context, in *gen.GetUserInformationRequest) (*gen.GetUserResponse, error) {
-	return &gen.GetUserResponse{
+func (s *AuthorizationGRPCServer) GetUserInformation(ctx context.Context, in *gen.GetUserByIdRequest) (*gen.GetUserByIdResponse, error) {
+	return &gen.GetUserByIdResponse{
 		Avatar:     "test",
 		FirstName:  "test",
 		LastName:   "test",
