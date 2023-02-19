@@ -20,7 +20,7 @@ import (
 )
 
 // Запуск приложения
-func Run(ctx context.Context, log *log.Logger, config *cfg.Config, conn *gorm.DB) {
+func Run(ctx context.Context, l *log.Logger, config *cfg.Config, conn *gorm.DB) {
 	httpServer := server.NewHTTPServer(config.HTTP)
 	router := httpServer.GetRouter()
 	services := srvs.NewService(config, conn)
@@ -39,12 +39,16 @@ func Run(ctx context.Context, log *log.Logger, config *cfg.Config, conn *gorm.DB
 		if err != nil {
 			panic("GRPC is't started!")
 		}
+
+		l.Infoln("GRPC started on port 1000")
 	}()
 	go func() {
 		err := httpServer.StartHTTPServer()
 		if err != nil {
 			panic("HTTP is't started!")
 		}
+
+		l.Infoln("GRPC started on port " + httpServer.GetConfig().GetPort())
 	}()
 }
 
@@ -54,7 +58,7 @@ func startGRPCServer() error {
 	srv := &auth_grpc.AuthorizationGRPCServer{}
 	auth_gen.RegisterAuthorizationServiceServer(grpcServer, srv)
 
-	l, err := net.Listen("tcp", ":9091")
+	l, err := net.Listen("tcp", ":1000")
 	if err != nil {
 		return err
 	}

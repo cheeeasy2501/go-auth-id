@@ -19,6 +19,10 @@ func NewHTTPServer(cnf IHTTPConfig) *HTTPServer {
 	}
 }
 
+func (s *HTTPServer) GetConfig() IHTTPConfig {
+	return s.config
+}
+
 func (s *HTTPServer) GetRouter() *gin.Engine {
 	return s.router
 }
