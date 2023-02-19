@@ -15,11 +15,11 @@ message CheckTokenResponse {
     uint64 userId = 2;
 }
 
-message GetUserInformationRequest {
+message GetUserByIdRequest {
     uint64 userId = 1;
 }
 
-message GetUserResponse {
+message GetUserByIdResponse {
     string Avatar = 1;
 	string FirstName = 2;
 	string LastName = 3;
@@ -35,6 +35,6 @@ service AuthorizationService {
         };
     } 
 
-    rpc GetUserInformation(GetUserInformationRequest) returns (GetUserResponse);
+    rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse);
 }
 
