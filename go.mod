@@ -4,21 +4,15 @@ go 1.18
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.4.3
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
 	github.com/joho/godotenv v1.4.0
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/crypto v0.3.0
 	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/gorm v1.24.2
 )
 
-require (
-	github.com/golang/glog v1.0.0 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
+require github.com/golang/protobuf v1.5.2 // indirect
 
 require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
