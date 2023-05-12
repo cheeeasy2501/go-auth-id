@@ -2,14 +2,13 @@ package entity
 
 import (
 	"time"
-
 	"gorm.io/gorm"
 
 	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/request"
 )
 
 type User struct {
-	gorm.Model
+	ID uint64 `gorm:"primarykey"`
 	Avatar,
 	FirstName,
 	LastName,
@@ -18,6 +17,9 @@ type User struct {
 	Email string
 	emailVerifiedAt time.Time
 	isBanned        bool
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       gorm.DeletedAt `gorm:"index"`
 }
 
 func NewUser() User {
@@ -35,11 +37,3 @@ func NewUserFromRegistrationRequest(request request.RegistrationRequest) User {
 		isBanned:   false,
 	}
 }
-
-// func (u *User) Password() string {
-// 	return u.password
-// }
-
-// func (u *User) SetPassword(password string) {
-// 	u.password = password
-// }

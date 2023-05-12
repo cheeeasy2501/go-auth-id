@@ -37,7 +37,7 @@ func Run(ctx context.Context, l *log.Logger, config *cfg.Config, conn *gorm.DB) 
 	go func() {
 		err := startGRPCServer()
 		if err != nil {
-			panic("GRPC is't started!")
+			panic("GRPC isn't started!")
 		}
 
 		l.Infoln("GRPC started on port 1000")
@@ -45,7 +45,7 @@ func Run(ctx context.Context, l *log.Logger, config *cfg.Config, conn *gorm.DB) 
 	go func() {
 		err := httpServer.StartHTTPServer()
 		if err != nil {
-			panic("HTTP is't started!")
+			panic("HTTP isn't started!")
 		}
 
 		l.Infoln("GRPC started on port " + httpServer.GetConfig().GetPort())

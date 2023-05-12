@@ -7,12 +7,14 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/crypto v0.3.0
-	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/gorm v1.24.2
 )
 
-require github.com/golang/protobuf v1.5.2 // indirect
+require (
+	github.com/golang/protobuf v1.5.3 // indirect
+	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
+)
 
 require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -28,7 +30,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/net v0.5.0 // indirect
-	google.golang.org/protobuf v1.28.1
+	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
