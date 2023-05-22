@@ -9,16 +9,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	"github.com/cheeeasy2501/auth-id/internal/apperr"
 	"github.com/cheeeasy2501/auth-id/internal/entity"
 	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/request"
 )
 
 type UserClaims struct {
-	Id         uint   `json:"id"`
-	Avatar     string `json:"avatar"`
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
-	MiddleName string `json:"middle_name"`
+	Id uint64 `json:"id"`
 }
 
 type Claims struct {
@@ -28,14 +25,14 @@ type Claims struct {
 
 type RefreshClaims struct {
 	jwt.RegisteredClaims
-	Id uint `json:"id"`
+	Id uint64 `json:"id"`
 }
 
 type ITokenService interface {
 	generateAccessToken(user *entity.User) (string, error)
-	generateRefreshToken(userId uint) (string, error)
-	ParseToken(t string) (uint, error)
-	ParseRefreshToken(t string) (uint, error)
+	generateRefreshToken(userId uint64) (string, error)
+	ParseToken(t string) (uint64, error)
+	ParseRefreshToken(t string) (uint64, error)
 	RefreshToken(request *request.RefreshTokenRequest) (entity.Tokens, error)
 }
 
@@ -131,11 +128,7 @@ func (s *AuthorizationService) generateAccessToken(usr *entity.User) (string, er
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 		UserClaims: UserClaims{
-			Id:         usr.ID,
-			Avatar:     usr.Avatar,
-			FirstName:  usr.FirstName,
-			LastName:   usr.LastName,
-			MiddleName: usr.MiddleName,
+			Id: usr.ID,
 		},
 	})
 
@@ -143,7 +136,7 @@ func (s *AuthorizationService) generateAccessToken(usr *entity.User) (string, er
 }
 
 // Генерируем refresh token
-func (s *AuthorizationService) generateRefreshToken(userId uint) (string, error) {
+func (s *AuthorizationService) generateRefreshToken(userId uint64) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &RefreshClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 30)),
@@ -156,7 +149,7 @@ func (s *AuthorizationService) generateRefreshToken(userId uint) (string, error)
 }
 
 // Парсим и валидируем токен
-func (s *AuthorizationService) ParseToken(t string) (uint, error) {
+func (s *AuthorizationService) ParseToken(t string) (uint64, error) {
 	token, err := jwt.ParseWithClaims(t, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("Invalid method")
@@ -176,7 +169,7 @@ func (s *AuthorizationService) ParseToken(t string) (uint, error) {
 	return claims.Id, nil
 }
 
-func (s *AuthorizationService) ParseRefreshToken(t string) (uint, error) {
+func (s *AuthorizationService) ParseRefreshToken(t string) (uint64, error) {
 	token, err := jwt.ParseWithClaims(t, &RefreshClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("Invalid method")
@@ -215,7 +208,7 @@ func (s *AuthorizationService) VerifyPassword(userPass, credentialsPass string) 
 	err = bcrypt.CompareHashAndPassword(comparePass, []byte(credentialsPass))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return errors.New("Invalid credentionals!")
+			return new(apperr.InvalidCredentionals)
 		}
 
 		return err

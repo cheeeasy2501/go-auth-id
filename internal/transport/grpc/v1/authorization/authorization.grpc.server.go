@@ -1,39 +1,62 @@
 package authorization
 
 import (
-	context "context"
+	"context"
+	_ "fmt"
 
-	gen "github.com/cheeeasy2501/auth-id/gen/authorization"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	gen "github.com/cheeeasy2501/auth-id/gen"
+	"github.com/cheeeasy2501/auth-id/internal/apperr"
+	_ "github.com/cheeeasy2501/auth-id/internal/apperr"
 	srvs "github.com/cheeeasy2501/auth-id/internal/service"
 )
 
 type AuthorizationGRPCServer struct {
 	gen.UnimplementedAuthorizationServiceServer
 	authorizationService srvs.IAuthorizationService
+	userService          srvs.IUserService
 }
 
-func NewAUthorizationGRPCServer(authorizationService srvs.IAuthorizationService) *AuthorizationGRPCServer {
+func NewAuthorizationGRPCServer(s *srvs.Services) *AuthorizationGRPCServer {
 	return &AuthorizationGRPCServer{
-		authorizationService: authorizationService,
+		authorizationService: s.Authorization,
+		userService:          s.User,
 	}
 }
 
 // TODO: mock
 func (s *AuthorizationGRPCServer) CheckToken(ctx context.Context, in *gen.CheckTokenRequest) (*gen.CheckTokenResponse, error) {
+	id, err := s.authorizationService.ParseToken(in.GetToken())
+	if err != nil {
+		err = status.Error(codes.PermissionDenied, err.Error())
+		return &gen.CheckTokenResponse{
+			Authorize: false,
+			UserId:    0,
+		}, err
+	}
+
 	return &gen.CheckTokenResponse{
 		Authorize: true,
-		UserId:    1,
+		UserId:    id,
 	}, nil
 }
 
-func (s *AuthorizationGRPCServer) GetUserInformation(ctx context.Context, in *gen.GetUserByIdRequest) (*gen.GetUserByIdResponse, error) {
+func (s *AuthorizationGRPCServer) GetUserById(ctx context.Context, in *gen.GetUserByIdRequest) (*gen.GetUserByIdResponse, error) {
+	u, err := s.userService.GetUserById(ctx, in.GetUserId())
+	if err != nil {
+		err = status.Error(codes.NotFound, apperr.NewShortCustomErr("GetUserById", err).Error())
+		return &gen.GetUserByIdResponse{}, err
+	}
+
 	return &gen.GetUserByIdResponse{
-		Avatar:     "test",
-		FirstName:  "test",
-		LastName:   "test",
-		MiddleName: "test",
-		Email:      "test",
+		ID:         u.ID,
+		Avatar:     u.Avatar,
+		FirstName:  u.FirstName,
+		LastName:   u.LastName,
+		MiddleName: u.MiddleName,
+		Email:      u.Email,
 	}, nil
 }
 
