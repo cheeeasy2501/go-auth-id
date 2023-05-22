@@ -23,7 +23,7 @@ func NewUserService(conn *gorm.DB) IUserService {
 
 func (s *UserService) GetUserById(ctx context.Context, id uint64) (entity.User, error) {
 	u := entity.NewUser()
-	res := s.conn.First(u, "id = $1", id)
+	res := s.conn.First(&u, id)
 	if err := res.Error; err != nil {
 		return u, err
 	}

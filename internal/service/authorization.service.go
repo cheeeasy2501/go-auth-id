@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	"github.com/cheeeasy2501/auth-id/internal/apperr"
 	"github.com/cheeeasy2501/auth-id/internal/entity"
 	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/request"
 )
@@ -207,7 +208,7 @@ func (s *AuthorizationService) VerifyPassword(userPass, credentialsPass string) 
 	err = bcrypt.CompareHashAndPassword(comparePass, []byte(credentialsPass))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return errors.New("Invalid credentionals!")
+			return new(apperr.InvalidCredentionals)
 		}
 
 		return err

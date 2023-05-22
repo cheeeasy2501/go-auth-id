@@ -1,6 +1,6 @@
 module github.com/cheeeasy2501/auth-id
 
-go 1.18
+go 1.20
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.4.3

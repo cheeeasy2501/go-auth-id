@@ -10,7 +10,7 @@ import (
 	cfg "github.com/cheeeasy2501/auth-id/config"
 	srvs "github.com/cheeeasy2501/auth-id/internal/service"
 
-	auth_gen "github.com/cheeeasy2501/auth-id/gen/authorization"
+	gen "github.com/cheeeasy2501/auth-id/gen"
 	auth_grpc "github.com/cheeeasy2501/auth-id/internal/transport/grpc/v1/authorization"
 	ctlr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/controller"
 	mwr "github.com/cheeeasy2501/auth-id/internal/transport/http/v1/middleware"
@@ -35,7 +35,7 @@ func Run(ctx context.Context, l *log.Logger, config *cfg.Config, conn *gorm.DB) 
 	}
 
 	go func() {
-		err := startGRPCServer()
+		err := startGRPCServer(services)
 		if err != nil {
 			panic("GRPC isn't started!")
 		}
@@ -53,10 +53,10 @@ func Run(ctx context.Context, l *log.Logger, config *cfg.Config, conn *gorm.DB) 
 }
 
 // Запуск GRPC
-func startGRPCServer() error {
+func startGRPCServer(s *srvs.Services) error {
 	grpcServer := grpc.NewServer()
-	srv := &auth_grpc.AuthorizationGRPCServer{}
-	auth_gen.RegisterAuthorizationServiceServer(grpcServer, srv)
+	srv := auth_grpc.NewAuthorizationGRPCServer(s)
+	gen.RegisterAuthorizationServiceServer(grpcServer, srv)
 
 	l, err := net.Listen("tcp", ":1000")
 	if err != nil {

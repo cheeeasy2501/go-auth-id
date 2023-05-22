@@ -31,13 +31,6 @@ message GetUserByIdResponse {
 
 service AuthorizationService {
     rpc CheckToken(CheckTokenRequest) returns (CheckTokenResponse);
-    // example {
-    //     option (google.api.http) = {
-    //         post: "/v1/auth/check-token"
-    //         body: "*"
-    //     };
-    // } 
-
     rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse);
 }
 
