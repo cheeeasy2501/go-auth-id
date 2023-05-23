@@ -2,7 +2,9 @@ package authorization
 
 import (
 	"context"
+	"fmt"
 	_ "fmt"
+	"net"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -11,22 +13,45 @@ import (
 	"github.com/cheeeasy2501/auth-id/internal/apperr"
 	_ "github.com/cheeeasy2501/auth-id/internal/apperr"
 	srvs "github.com/cheeeasy2501/auth-id/internal/service"
+	auth_pkg "github.com/cheeeasy2501/auth-id/pkg/grpc/v1/authorization"
+	"google.golang.org/grpc"
 )
 
 type AuthorizationGRPCServer struct {
 	gen.UnimplementedAuthorizationServiceServer
+	srv                  *grpc.Server
+	cfg                  auth_pkg.IConfig
 	authorizationService srvs.IAuthorizationService
 	userService          srvs.IUserService
 }
 
-func NewAuthorizationGRPCServer(s *srvs.Services) *AuthorizationGRPCServer {
+func NewAuthorizationGRPCServer(cfg auth_pkg.IConfig, srvs *srvs.Services) (*AuthorizationGRPCServer, error) {
 	return &AuthorizationGRPCServer{
-		authorizationService: s.Authorization,
-		userService:          s.User,
-	}
+		cfg:                  cfg,
+		authorizationService: srvs.Authorization,
+		userService:          srvs.User,
+	}, nil
 }
 
-// TODO: mock
+func (s *AuthorizationGRPCServer) Run(srvs *srvs.Services) error {
+	s.srv = grpc.NewServer()
+	// srv := NewAuthorizationGRPCServer(s.cfg, srvs)
+	gen.RegisterAuthorizationServiceServer(s.srv, s) // TODO: check
+
+	l, err := net.Listen("tcp", s.cfg.GetAddr())
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		if err := s.srv.Serve(l); err != nil {
+			fmt.Printf("GRPC Server Shutdown. Error: %v\n", err)
+		}
+	}()
+
+	return nil
+}
+
 func (s *AuthorizationGRPCServer) CheckToken(ctx context.Context, in *gen.CheckTokenRequest) (*gen.CheckTokenResponse, error) {
 	id, err := s.authorizationService.ParseToken(in.GetToken())
 	if err != nil {
@@ -59,15 +84,3 @@ func (s *AuthorizationGRPCServer) GetUserById(ctx context.Context, in *gen.GetUs
 		Email:      u.Email,
 	}, nil
 }
-
-// type AuthorizationGRPCClient struct {
-
-// }
-
-// func (c *AuthorizationGRPCClient) CheckToken(ctx context.Context, in *CheckTokenRequest, opts ...grpc.CallOption) (*CheckTokenResponse, error) {
-
-// }
-
-// func (c *AuthorizationGRPCClient) GetUserInformation(ctx context.Context, in *GetUserInformationRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
-
-// }

@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -27,7 +29,7 @@ func (s *HTTPServer) GetRouter() *gin.Engine {
 	return s.router
 }
 
-func (s *HTTPServer) StartHTTPServer() error {
+func (s *HTTPServer) Run() error {
 	srv := &http.Server{
 		Addr:           s.config.GetAddr(),
 		Handler:        s.router,
@@ -36,10 +38,13 @@ func (s *HTTPServer) StartHTTPServer() error {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	err := srv.ListenAndServe()
-	if err != nil {
-		return err
-	}
+	go func() {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			fmt.Printf("HTTP Server Shutdown Error: %v", err)
+		}
+		// TODO: check!!!
+		srv.Shutdown(context.TODO())
+	}()
 
 	return nil
 }
