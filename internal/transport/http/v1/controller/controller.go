@@ -7,10 +7,12 @@ import (
 
 type Controller struct {
 	Authorization IAuthorizationController
+	Mail IMailController
 }
 
 func NewController(s *service.Services) *Controller {
 	return &Controller{
 		Authorization: NewAuthorizationController(s),
+		Mail:          NewMailController(s),
 	}
 }

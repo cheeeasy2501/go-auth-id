@@ -36,12 +36,22 @@ func Run(ctx context.Context, l *log.Logger, config *cfg.Config, conn *gorm.DB) 
 
 	httpServer := server.NewHTTPServer(config.HTTP)
 	router := httpServer.GetRouter()
-	v1 := router.Group("/v1/auth")
+	v1 := router.Group("/v1")
 	{
-		v1.POST("/login", controllers.Authorization.LoginByEmail)
-		v1.POST("/registration", controllers.Authorization.Registration) // отправляю письмо на email?
-		v1.POST("/refresh-token", middleware.Jwtm.CheckRefreshToken(), controllers.Authorization.RefreshToken)
+		publicRoute := v1.Group("/auth")
+		{
+			publicRoute.POST("/login", controllers.Authorization.LoginByEmail)
+			publicRoute.POST("/registration", controllers.Authorization.Registration) // отправляю письмо на email?
+			publicRoute.POST("/refresh-token", middleware.Jwtm.CheckRefreshToken(), controllers.Authorization.RefreshToken)
+		}
+
+		protectedRoute := v1.Group("/mail").Use(middleware.Jwtm.Authorize())
+		{
+			protectedRoute.POST("/send", )
+		} 
+		
 	}
+
 
 	err = httpServer.Run()
 	if err != nil {
