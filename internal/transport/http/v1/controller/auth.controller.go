@@ -73,13 +73,13 @@ func (c *AuthorizationController) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
-	userId, casted := userIdString.(uint)
+	userId, casted := userIdString.(uint64)
 	if casted == false {
 		srv.ErrorResponse(ctx, http.StatusBadRequest, nil)
 		return
 	}
 
-	request := request.NewRefreshTokenRequest(uint64(userId))
+	request := request.NewRefreshTokenRequest(userId)
 
 	tokens, err := c.Authorization.RefreshToken(request)
 	if err != nil {
@@ -87,7 +87,7 @@ func (c *AuthorizationController) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
-	srv.Response(ctx, http.StatusCreated, response.NewRefreshTokenResponse(tokens.AccessToken, tokens.RefreshToken))
+	srv.Response(ctx, http.StatusOK, response.NewRefreshTokenResponse(tokens.AccessToken, tokens.RefreshToken))
 }
 
 // func (c *AuthorizationController) RegisterRoutes(group *gin.RouterGroup) {

@@ -4,7 +4,7 @@ package gen;
 
 option go_package = "/authorization";
 
-import "google/api/annotations.proto";
+// import "google/api/annotations.proto";
 
 message CheckTokenRequest {
     string token = 1;
@@ -20,21 +20,17 @@ message GetUserByIdRequest {
 }
 
 message GetUserByIdResponse {
-    string Avatar = 1;
-	string FirstName = 2;
-	string LastName = 3;
-	string MiddleName = 4;
-	string Email = 5;
+    uint64  ID = 1;
+    string Avatar = 2;
+	string FirstName = 3;
+	string LastName = 4;
+	string MiddleName = 5;
+	string Email = 6;
+    bool   IsBanned = 7;
 }
 
 service AuthorizationService {
-    rpc CheckToken(CheckTokenRequest) returns (CheckTokenResponse) {
-        option (google.api.http) = {
-            post: "/v1/auth/check-token"
-            body: "*"
-        };
-    } 
-
+    rpc CheckToken(CheckTokenRequest) returns (CheckTokenResponse);
     rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse);
 }
 

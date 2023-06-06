@@ -15,49 +15,8 @@
   "produces": [
     "application/json"
   ],
-  "paths": {
-    "/v1/auth/check-token": {
-      "post": {
-        "operationId": "AuthorizationService_CheckToken",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/genCheckTokenResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/genCheckTokenRequest"
-            }
-          }
-        ],
-        "tags": [
-          "AuthorizationService"
-        ]
-      }
-    }
-  },
+  "paths": {},
   "definitions": {
-    "genCheckTokenRequest": {
-      "type": "object",
-      "properties": {
-        "token": {
-          "type": "string"
-        }
-      }
-    },
     "genCheckTokenResponse": {
       "type": "object",
       "properties": {
@@ -70,9 +29,13 @@
         }
       }
     },
-    "genGetUserResponse": {
+    "genGetUserByIdResponse": {
       "type": "object",
       "properties": {
+        "ID": {
+          "type": "string",
+          "format": "uint64"
+        },
         "Avatar": {
           "type": "string"
         },
@@ -87,6 +50,9 @@
         },
         "Email": {
           "type": "string"
+        },
+        "IsBanned": {
+          "type": "boolean"
         }
       }
     },
