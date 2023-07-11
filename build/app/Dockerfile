@@ -22,9 +22,9 @@ RUN CGO_ENABLED=1 GOOS=linux go build -o /go/auth-id/main -a -ldflags '-linkmode
 ############################
 # STEP 2 build a small image
 ############################
-FROM scratch
-# FROM golang:alpine3.15
-#WORKDIR /go/auth-id
+# FROM scratch
+FROM golang:alpine3.15
+WORKDIR /go/auth-id
 
 # Import from builder.
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
@@ -34,7 +34,7 @@ COPY --from=builder /etc/group /etc/group
 
 # Copy our static executable
 COPY --from=builder /go/auth-id/ /go/auth-id/
-COPY --from=builder /go/auth-id/env.local /go/auth-id/.env
-
+# COPY --from=builder /go/auth-id/env.local /go/auth-id/.env.local
+RUN ls -la
 # Run the binary.
 ENTRYPOINT ["/go/auth-id/main"]

@@ -27,7 +27,7 @@ func (s *HTTPServer) GetRouter() *gin.Engine {
 	return s.router
 }
 
-func (s *HTTPServer) StartHTTPServer() error {
+func (s *HTTPServer) Run() error {
 	srv := &http.Server{
 		Addr:           s.config.GetAddr(),
 		Handler:        s.router,

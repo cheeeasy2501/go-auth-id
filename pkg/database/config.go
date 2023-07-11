@@ -18,7 +18,7 @@ type Config struct {
 	host, user, password, dbname, sslmode, timeZone, port string
 }
 
-func NewPostgresConfig() *Config {
+func NewConfig() *Config {
 	return &Config{
 		host:     os.Getenv("POSTGRES_HOST"),
 		user:     os.Getenv("POSTGRES_USER"),

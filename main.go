@@ -3,11 +3,12 @@ package main
 import (
 	//"os"
 
-	"github.com/joho/godotenv"
-	log "github.com/sirupsen/logrus"
 	ctx "context"
 	"os/signal"
 	"syscall"
+
+	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/cheeeasy2501/auth-id/cmd/app"
 	cfg "github.com/cheeeasy2501/auth-id/config"

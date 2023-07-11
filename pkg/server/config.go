@@ -20,7 +20,7 @@ type Config struct {
 	writeTimeout int
 }
 
-func NewHTTPConfig() IHTTPConfig {
+func NewConfig() IHTTPConfig {
 	readTimeout, err := strconv.Atoi(os.Getenv("APP_READ_TIMEOUT"))
 	if err != nil {
 		panic(err)
