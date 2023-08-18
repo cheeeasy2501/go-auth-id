@@ -20,22 +20,35 @@ func NewJWTMiddleware(s service.ITokenService) *JWTMiddleware {
 	}
 }
 
+func (m *JWTMiddleware) SplitToken(ctx *gin.Context, headerName string) (string, bool) {
+	hn := "Authorization"
+
+	if headerName != "" {
+		hn = headerName
+	}
+
+	header := ctx.GetHeader(hn)
+	if header == "" {
+		server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return "", false
+	}
+
+	parts := strings.Split(header, " ")
+	if len(parts) != 2 {
+		server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Invalid token"))
+		return "", false
+	}
+
+	return parts[1], true
+}
+
 // Проверяет токен
 func (m *JWTMiddleware) Authorize() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		header := ctx.GetHeader("Authorization")
-		if header == "" {
-			server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Unauthorized"))
+		token, ok := m.SplitToken(ctx, "Authorization")
+		if !ok {
 			return
 		}
-
-		parts := strings.Split(header, " ")
-		if len(parts) != 2 {
-			server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Invalid token"))
-			return
-		}
-
-		token := parts[1]
 
 		userId, err := m.s.ParseToken(token)
 		if err != nil {
@@ -48,28 +61,19 @@ func (m *JWTMiddleware) Authorize() gin.HandlerFunc {
 }
 
 // TODO: возможно стоит сделать одну токен-функцию
-func (m *JWTMiddleware) CheckRefreshToken() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		header := ctx.GetHeader("Authorization")
-		if header == "" {
-			server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Unauthorized"))
-			return
-		}
+// func (m *JWTMiddleware) CheckRefreshToken() gin.HandlerFunc {
+// 	return func(ctx *gin.Context) {
+// 		token, ok := m.SplitToken(ctx)
+// 		if !ok {
+// 			return
+// 		}
 
-		parts := strings.Split(header, " ")
-		if len(parts) != 2 {
-			server.ErrorResponse(ctx, http.StatusUnauthorized, errors.New("Invalid token"))
-			return
-		}
+// 		userId, err := m.s.ParseToken(token)
+// 		if err != nil {
+// 			server.ErrorResponse(ctx, http.StatusUnauthorized, err)
+// 			return
+// 		}
 
-		token := parts[1]
-
-		userId, err := m.s.ParseRefreshToken(token)
-		if err != nil {
-			server.ErrorResponse(ctx, http.StatusUnauthorized, err)
-			return
-		}
-
-		ctx.Set("userId", userId)
-	}
-}
+// 		ctx.Set("userId", userId)
+// 	}
+// }

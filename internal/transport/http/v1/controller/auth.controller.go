@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/cheeeasy2501/auth-id/internal/service"
@@ -14,7 +15,7 @@ import (
 type IAuthorizationController interface {
 	LoginByEmail(ctx *gin.Context)
 	Registration(ctx *gin.Context)
-	RefreshToken(ctx *gin.Context)
+	CheckToken(ctx *gin.Context)
 }
 
 type AuthorizationController struct {
@@ -42,10 +43,7 @@ func (c *AuthorizationController) LoginByEmail(ctx *gin.Context) {
 		return
 	}
 
-	srv.Response(ctx, http.StatusOK, gin.H{
-		"accessToken":  tokens.AccessToken,
-		"refreshToken": tokens.RefreshToken,
-	})
+	srv.Response(ctx, http.StatusOK, response.NewTokenResponse(tokens.AccessToken, tokens.RefreshToken))
 }
 
 func (c *AuthorizationController) Registration(ctx *gin.Context) {
@@ -66,16 +64,16 @@ func (c *AuthorizationController) Registration(ctx *gin.Context) {
 	srv.Response(ctx, http.StatusCreated, nil)
 }
 
-func (c *AuthorizationController) RefreshToken(ctx *gin.Context) {
-	userIdString, exist := ctx.Get("userId")
-	if exist == false {
-		srv.ErrorResponse(ctx, http.StatusBadRequest, nil)
+func (c *AuthorizationController) CheckToken(ctx *gin.Context) {
+	uID, exist := ctx.Get("userId")
+	if !exist {
+		srv.ErrorResponse(ctx, http.StatusBadRequest, errors.New("user id isn't found"))
 		return
 	}
 
-	userId, casted := userIdString.(uint64)
-	if casted == false {
-		srv.ErrorResponse(ctx, http.StatusBadRequest, nil)
+	userId, casted := uID.(uint64)
+	if !casted {
+		srv.ErrorResponse(ctx, http.StatusBadRequest, errors.New("invalid user id"))
 		return
 	}
 
@@ -87,11 +85,5 @@ func (c *AuthorizationController) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
-	srv.Response(ctx, http.StatusOK, response.NewRefreshTokenResponse(tokens.AccessToken, tokens.RefreshToken))
+	srv.Response(ctx, http.StatusOK, response.NewTokenResponse(tokens.AccessToken, tokens.RefreshToken))
 }
-
-// func (c *AuthorizationController) RegisterRoutes(group *gin.RouterGroup) {
-// 	group.POST("/login", c.LoginByEmail)
-// 	group.POST("/registration", c.Registration)
-// 	group.Use()
-// }

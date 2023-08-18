@@ -14,6 +14,13 @@ import (
 	"github.com/cheeeasy2501/auth-id/internal/transport/http/v1/request"
 )
 
+type TokenType int8
+
+const (
+	AccessType TokenType = iota
+	RefreshType
+)
+
 type UserClaims struct {
 	Id uint64 `json:"id"`
 }
@@ -31,8 +38,7 @@ type RefreshClaims struct {
 type ITokenService interface {
 	generateAccessToken(user *entity.User) (string, error)
 	generateRefreshToken(userId uint64) (string, error)
-	ParseToken(t string) (uint64, error)
-	ParseRefreshToken(t string) (uint64, error)
+	ParseToken(token string) (uint64, error)
 	RefreshToken(request *request.RefreshTokenRequest) (entity.Tokens, error)
 }
 
@@ -161,12 +167,14 @@ func (s *AuthorizationService) ParseToken(t string) (uint64, error) {
 		return 0, errors.New("Unathorized")
 	}
 
-	claims, ok := token.Claims.(*Claims)
-	if !ok {
-		return 0, err
+	switch v := token.Claims.(type) {
+	case *Claims:
+		return v.Id, nil
+	case *RefreshClaims:
+		return v.Id, nil
+	default:
+		return 0, errors.New("Unathorized")
 	}
-
-	return claims.Id, nil
 }
 
 func (s *AuthorizationService) ParseRefreshToken(t string) (uint64, error) {

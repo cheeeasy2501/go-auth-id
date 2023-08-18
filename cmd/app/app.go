@@ -41,12 +41,14 @@ func Run(ctx context.Context, l *log.Logger, cfg *cfg.Config, conn *gorm.DB) {
 
 		controllers := ctlr.NewController(services)
 		middleware := mwr.NewMiddleware(services.Authorization)
+		_ = middleware
 
 		auth := router.Group("/v1/auth")
 		{
 			auth.POST("/login", controllers.Authorization.LoginByEmail)
-			auth.POST("/registration", controllers.Authorization.Registration) // отправляю письмо на email?
-			auth.POST("/refresh-token", middleware.Jwtm.CheckRefreshToken(), controllers.Authorization.RefreshToken)
+			auth.POST("/registration", controllers.Authorization.Registration) // отправляю письмо на email
+			auth.POST("/check", controllers.Authorization.CheckToken)
+			// auth.POST("/refresh-token", middleware.Jwtm.CheckRefreshToken(), controllers.Authorization.RefreshToken)
 		}
 
 		err := httpServer.Run()
